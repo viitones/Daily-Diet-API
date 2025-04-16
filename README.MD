@@ -1,3 +1,7 @@
+```sh
+  run: npm run knex migrate:latest
+```
+
 ### Regras da aplicação
 
 - [x] Deve ser possível criar um usuário
