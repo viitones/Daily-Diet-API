@@ -1,0 +1,33 @@
+{
+  "name": "daily-diet-api",
+  "version": "1.0.0",
+  "description": "[ ] Deve ser possível criar um usuário;",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx --watch src/server.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viitones/Daily-Diet-API.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/viitones/Daily-Diet-API/issues"
+  },
+  "homepage": "https://github.com/viitones/Daily-Diet-API#readme",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "fastify": "^5.3.0",
+    "knex": "^3.1.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@rocketseat/eslint-config": "^2.2.2",
+    "@types/node": "^22.14.1",
+    "eslint": "^8.57.1",
+    "tsx": "^4.19.3"
+  }
+}
