@@ -1,10 +1,10 @@
 import { app } from "./app";
 import { knex } from "./database";
 
-app.get("/", async () => {
-  const test = await knex("sqlite_schema").select("*");
+app.post("/users", async () => {
+  const users = await knex("users").select("*");
 
-  return test;
+  return users;
 });
 
 app
