@@ -1,10 +1,5 @@
 import { app } from "./app";
 import { env } from "./env";
-import { userRoutes } from "./http/routes/users";
-
-app.register(userRoutes, {
-  prefix: "users",
-});
 
 app
   .listen({
