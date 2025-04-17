@@ -5,6 +5,12 @@ import { knex } from "../../database";
 import { checkSessionId } from "../../middlewares/checkSessionId";
 
 export async function mealRoute(app: FastifyInstance) {
+  app.get("/", { preHandler: [checkSessionId] }, async () => {
+    const meals = await knex("meals").select();
+
+    return { meals };
+  });
+
   app.post(
     "/",
     { preHandler: [checkSessionId] },
