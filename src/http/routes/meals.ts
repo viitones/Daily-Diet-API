@@ -71,6 +71,28 @@ export async function mealRoute(app: FastifyInstance) {
     });
   });
 
+  app.delete("/:id", async (request: FastifyRequest, reply: FastifyReply) => {
+    const deleteMealParamsSchema = z.object({
+      id: z.string().uuid(),
+    });
+
+    const { id } = deleteMealParamsSchema.parse(request.params);
+
+    const meal = await knex("meals").where({ id }).first();
+
+    if (!meal) {
+      return reply.status(404).send({
+        message: "🥝⚠️ Meal not found ⚠️🥝",
+      });
+    }
+
+    await knex("meals").where("id", meal.id).delete();
+
+    return reply.status(200).send({
+      message: "🥝 Meal deleted successfully",
+    });
+  });
+
   app.post("/", async (request: FastifyRequest, reply: FastifyReply) => {
     const createMealSchema = z.object({
       name: z.string().min(1),
