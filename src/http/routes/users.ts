@@ -12,6 +12,14 @@ export async function userRoutes(app: FastifyInstance) {
 
     const { email, username } = createUserSchema.parse(request.body);
 
+    const userByEmail = await knex("users").where("email", email).first();
+
+    if (userByEmail) {
+      return reply.status(409).send({
+        message: "⚠️ User already exists",
+      });
+    }
+
     let sessionId = request.cookies.sessionId;
 
     if (!sessionId) {
