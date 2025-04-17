@@ -35,6 +35,57 @@ export async function mealRoute(app: FastifyInstance) {
     return { meal };
   });
 
+  app.get("/metrics", async (request: FastifyRequest, reply: FastifyReply) => {
+    const totalMealsMetrics = await knex("meals")
+      .where({
+        user_id: request.user?.id,
+      })
+      .orderBy("date", "desc");
+
+    const mealsOnDietMetrics = await knex("meals")
+      .where({
+        user_id: request.user?.id,
+        is_on_diet: true,
+      })
+      .count("id", { as: "total" })
+      .first();
+
+    const mealsOffDietMetrics = await knex("meals")
+      .where({
+        user_id: request.user?.id,
+        is_on_diet: false,
+      })
+      .count("id", { as: "total" })
+      .first();
+
+    const { bestSequence } = totalMealsMetrics.reduce(
+      (acc, meal) => {
+        if (meal.is_on_diet) {
+          acc.currentSequence += 1;
+        } else {
+          acc.currentSequence = 0;
+        }
+
+        if (acc.currentSequence > acc.bestSequence) {
+          acc.bestSequence = acc.currentSequence;
+        }
+
+        return acc;
+      },
+      {
+        bestSequence: 0,
+        currentSequence: 0,
+      },
+    );
+
+    return reply.status(200).send({
+      totalMealsMetrics: totalMealsMetrics.length,
+      mealsOnDietMetrics: mealsOnDietMetrics?.total,
+      mealsOffDietMetrics: mealsOffDietMetrics?.total,
+      bestSequence,
+    });
+  });
+
   app.put("/:id", async (request: FastifyRequest, reply: FastifyReply) => {
     const updateMealParamsSchema = z.object({
       id: z.string().uuid(),
