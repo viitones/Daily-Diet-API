@@ -6,59 +6,94 @@ import { knex } from "../../database";
 import { checkSessionId } from "../../middlewares/checkSessionId";
 
 export async function mealRoute(app: FastifyInstance) {
-  app.get("/", { preHandler: [checkSessionId] }, async () => {
+  app.addHook(
+    "preHandler",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      await checkSessionId(request, reply);
+    },
+  );
+
+  app.get("/", async () => {
     const meals = await knex("meals").select();
 
     return { meals };
   });
 
-  app.get(
-    "/:id",
-    { preHandler: [checkSessionId] },
-    async (request: FastifyRequest) => {
-      const getMealParamsSchema = z.object({
-        id: z.string().uuid(),
+  app.get("/:id", async (request: FastifyRequest) => {
+    const getMealParamsSchema = z.object({
+      id: z.string().uuid(),
+    });
+
+    const { id } = getMealParamsSchema.parse(request.params);
+
+    const meal = await knex("meals").where({ id }).first();
+
+    if (!meal) {
+      error("🥝⚠️ Meal not found ⚠️🥝");
+    }
+
+    return { meal };
+  });
+
+  app.put("/:id", async (request: FastifyRequest, reply: FastifyReply) => {
+    const updateMealParamsSchema = z.object({
+      id: z.string().uuid(),
+    });
+
+    const { id } = updateMealParamsSchema.parse(request.params);
+    const meal = await knex("meals").where({ id }).first();
+    if (!meal) {
+      return reply.status(404).send({
+        message: "🥝⚠️ Meal not found ⚠️🥝",
       });
+    }
 
-      const { id } = getMealParamsSchema.parse(request.params);
+    const updateMealBodySchema = z.object({
+      name: z.string().min(1),
+      description: z.string().min(1),
+      date: z.coerce.date().default(meal.date),
+      isOnDiet: z.boolean(),
+    });
 
-      const meal = await knex("meals").where({ id }).first();
+    const { name, description, isOnDiet, date } = updateMealBodySchema.parse(
+      request.body,
+    );
 
-      if (!meal) {
-        error("🥝⚠️ Meal not found ⚠️🥝");
-      }
+    await knex("meals").where({ id }).update({
+      name,
+      description,
+      date: date.getTime(),
+      is_on_diet: isOnDiet,
+    });
 
-      return { meal };
-    },
-  );
+    return reply.status(200).send({
+      message: "🥝 Meal updated successfully",
+    });
+  });
 
-  app.post(
-    "/",
-    { preHandler: [checkSessionId] },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const createMealSchema = z.object({
-        name: z.string().min(1),
-        description: z.string().min(1),
-        date: z.coerce.date(),
-        isOnDiet: z.boolean(),
-      });
+  app.post("/", async (request: FastifyRequest, reply: FastifyReply) => {
+    const createMealSchema = z.object({
+      name: z.string().min(1),
+      description: z.string().min(1),
+      date: z.coerce.date(),
+      isOnDiet: z.boolean(),
+    });
 
-      const { name, description, isOnDiet, date } = createMealSchema.parse(
-        request.body,
-      );
+    const { name, description, isOnDiet, date } = createMealSchema.parse(
+      request.body,
+    );
 
-      await knex("meals").insert({
-        id: randomUUID(),
-        name,
-        description,
-        date: date.getTime(),
-        is_on_diet: isOnDiet,
-        user_id: request.user?.id,
-      });
+    await knex("meals").insert({
+      id: randomUUID(),
+      name,
+      description,
+      date: date.getTime(),
+      is_on_diet: isOnDiet,
+      user_id: request.user?.id,
+    });
 
-      return reply.status(201).send({
-        message: "🥝 Meal created successfully",
-      });
-    },
-  );
+    return reply.status(201).send({
+      message: "🥝 Meal created successfully",
+    });
+  });
 }
