@@ -1,3 +1,4 @@
+import { error } from "console";
 import { randomUUID } from "crypto";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
@@ -10,6 +11,26 @@ export async function mealRoute(app: FastifyInstance) {
 
     return { meals };
   });
+
+  app.get(
+    "/:id",
+    { preHandler: [checkSessionId] },
+    async (request: FastifyRequest) => {
+      const getMealParamsSchema = z.object({
+        id: z.string().uuid(),
+      });
+
+      const { id } = getMealParamsSchema.parse(request.params);
+
+      const meal = await knex("meals").where({ id }).first();
+
+      if (!meal) {
+        error("🥝⚠️ Meal not found ⚠️🥝");
+      }
+
+      return { meal };
+    },
+  );
 
   app.post(
     "/",
